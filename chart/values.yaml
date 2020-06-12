@@ -1,0 +1,30 @@
+# Default values for chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: gcr.io/staging-176219/sonarqube-de
+  tag: 7.9.1
+  pullPolicy: Always
+size: 20Gi
+
+context: /sonarqube
+
+resources:
+   limits:
+    cpu: 2000m
+    memory: 4Gi
+   requests:
+    memory: 4Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+global:
+  databaseName: sonarqube
+  secretName: postgres-creds

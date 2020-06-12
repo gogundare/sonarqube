@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  {{ .Chart.Name }}
+  labels:
+    app:  {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app:  {{ .Chart.Name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app:  {{ .Chart.Name }}
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        fsGroup: 999
+      initContainers:
+        - image: busybox
+          name: data-init
+          command: ["/bin/sh", "-c", "mkdir -p /var/lib/postgresql/data/pgdata"]
+          volumeMounts:
+            - name:  {{ .Chart.Name }}
+              mountPath: /var/lib/postgresql/data
+      containers:
+        - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          name: postgresql
+          env:
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+            - name: POSTGRES_DB
+              value: {{ .Values.global.databaseName }}
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: password
+          ports:
+            - containerPort: 5432
+              name:  {{ .Chart.Name }}
+          volumeMounts:
+            - name:  {{ .Chart.Name }}
+              mountPath: /var/lib/postgresql/data
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+      volumes:
+        - name:  {{ .Chart.Name }}
+          persistentVolumeClaim:
+            claimName:  {{ .Chart.Name }}

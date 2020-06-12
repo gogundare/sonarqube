@@ -1,0 +1,14 @@
+image:
+  repository: postgres
+  tag: 11.1-alpine
+size: 20Gi
+replicaCount: 1
+databaseName: postgres
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
